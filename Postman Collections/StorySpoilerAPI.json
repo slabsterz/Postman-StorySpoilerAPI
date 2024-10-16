@@ -1,0 +1,362 @@
+{
+	"info": {
+		"_postman_id": "eacdbb7d-6a1b-456b-81a0-17f78c4a2ed6",
+		"name": "StorySpoilerApi",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login and Authenticate",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "c9fa9e3c-309b-4831-b670-4f9b5ba00b50",
+						"exec": [
+							"pm.test(\"Response status should be 200\", function() {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"const reponseJson = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Response object should contain username, password and accessToken properties\", function() {\r",
+							"    pm.expect(reponseJson).to.be.an(\"object\");\r",
+							"    pm.expect(reponseJson).to.haveOwnProperty(\"username\");\r",
+							"    pm.expect(reponseJson).to.haveOwnProperty(\"password\");\r",
+							"    pm.expect(reponseJson).to.haveOwnProperty(\"accessToken\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response property 'accessToken' should not be empty\", function() {\r",
+							"    pm.expect(reponseJson.accessToken).to.not.be.empty;\r",
+							"});\r",
+							"\r",
+							"pm.collectionVariables.set(\"accessToken\", reponseJson.accessToken);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "558c333b-70d4-4b38-bca7-df34fbc1847a",
+						"exec": [],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"id": "926ebb0f-ae7f-46aa-83e7-f20b08bb39c4",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"userName\": \"storytester\",\r\n  \"password\": \"abc123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{baseUrl}}/api/User/Authentication"
+			},
+			"response": []
+		},
+		{
+			"name": "Create New Story Spoiler",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a4b26f6f-7869-4e62-b5fc-243e992ca578",
+						"exec": [
+							"const randomNumber = Math.floor(Math.random() * 1000);\r",
+							"const randomTitle = `Storyspoiler${randomNumber}`;\r",
+							"\r",
+							"pm.collectionVariables.set(\"randomTitle\", randomTitle);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "1d3fea1a-aab2-412f-b279-04696ec153e9",
+						"exec": [
+							"pm.test(\"Response code should be 201\", function() {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const creationMessage = \"Successfully created!\";\r",
+							"const responseJson = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Response message should be 'Successfully created!\", function() {\r",
+							"    pm.expect(responseJson.msg).to.be.equal(creationMessage);\r",
+							"});\r",
+							"\r",
+							"const storyId = responseJson.storyId;\r",
+							"pm.collectionVariables.set(\"storyId\", storyId);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"id": "ab1e55a1-e9c3-456f-a6e9-a13abefe2d22",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "{{accessToken}}"
+					}
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"{{randomTitle}}\",\r\n  \"description\": \"Some description\",\r\n  \"url\": \"\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{baseUrl}}/api/Story/Create"
+			},
+			"response": []
+		},
+		{
+			"name": "Search Storyspoiler by Title",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "f85ee1f1-f9a2-4213-9bee-527c9e3b97dd",
+						"exec": [
+							"pm.test(\"Response status should be 200\", function() {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"const responseJson = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Response should be a non empty array\", function() {\r",
+							"    pm.expect(responseJson).to.be.an(\"array\");\r",
+							"    pm.expect(responseJson.length).to.be.greaterThan(0);\r",
+							"});\r",
+							"\r",
+							"const storyTitle = pm.collectionVariables.get(\"randomTitle\");\r",
+							"const foundStory = responseJson[0];\r",
+							"\r",
+							"pm.test(\"Response should contain matching story title\", function() {\r",
+							"    pm.expect(foundStory).to.not.be.null;\r",
+							"    pm.expect(foundStory.title).to.be.equal(storyTitle);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "c1bf5cb8-cb18-4252-8053-6c472acdda4b",
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"id": "61742e26-0ac9-4e46-8ead-e8b9c282bab7",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "{{accessToken}}"
+					}
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/Story/Search?keyword={{randomTitle}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"Story",
+						"Search"
+					],
+					"query": [
+						{
+							"key": "keyword",
+							"value": "{{randomTitle}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Edit Created Story Spoiler",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "a1660683-82d2-44f9-b627-16367d432469",
+						"exec": [
+							"pm.test(\"Response status should be 200\", function() {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"const responseJson = pm.response.json();\r",
+							"const editMessage = \"Successfully edited\";\r",
+							"\r",
+							"pm.test(\"Response message should be 'Successfully edited'\", function() {\r",
+							"    pm.expect(responseJson.msg).to.be.equal(editMessage);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "f7b544f9-7285-417a-ae45-40a9d47f69d5",
+						"exec": [],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"id": "d5fb3333-cff5-46c3-89fc-bbb6490f97b4",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "{{accessToken}}"
+					}
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"{{randomTitle}} Edited\",\r\n  \"description\": \"Edited description\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{baseUrl}}/api/Story/Edit/{{storyId}}"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Edited Spoiler",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "898dfa7b-804b-4dcf-9e8f-3cdc2c4f65eb",
+						"exec": [
+							"pm.test(\"Response status should be 200\", function() {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"const responseJson = pm.response.json();\r",
+							"const deletionMessage = \"Deleted successfully!\";\r",
+							"\r",
+							"pm.test(\"Response should contain 'Deleted successfully!' message\", function() {\r",
+							"    pm.expect(responseJson.msg).to.be.equal(deletionMessage);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "410eb4a8-0d9a-4c62-adc8-cb4a26cf48d9",
+						"exec": [],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"id": "84705d3f-dc09-42bf-85ea-aa1461c2d90d",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": {
+						"token": "{{accessToken}}"
+					}
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": "{{baseUrl}}/api/Story/Delete/{{storyId}}"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "f64f9fb4-16a6-4442-8b72-1ca06494d91d",
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "9395cde1-b1d1-4e40-87d3-fd59c93e8f8f",
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://d5wfqm7y6yb3q.cloudfront.net",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": ""
+		},
+		{
+			"key": "randomTitle",
+			"value": ""
+		},
+		{
+			"key": "storyId",
+			"value": ""
+		}
+	]
+}
